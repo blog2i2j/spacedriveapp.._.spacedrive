@@ -232,9 +232,7 @@ async fn main() -> tauri::Result<()> {
 						sleep(Duration::from_secs(3)).await;
 						if !window.is_visible().unwrap_or(true) {
 							// This happens if the JS bundle crashes and hence doesn't send ready event.
-							println!(
-							"Window did not emit `app_ready` event fast enough. Showing window..."
-						);
+							println!("Window did not emit `app_ready` event fast enough. Showing window...");
 							window.show().expect("Main window should show");
 						}
 					}
@@ -325,5 +323,6 @@ async fn main() -> tauri::Result<()> {
 		.build(tauri::generate_context!())?;
 
 	app.run(|_, _| {});
+
 	Ok(())
 }
