@@ -384,8 +384,6 @@ impl Libraries {
 		let db_path = db_path.as_ref();
 		let config_path = config_path.as_ref();
 
-		println!("load the library 1");
-
 		let db_url = format!(
 			"file:{}?socket_timeout=15&connection_limit=1",
 			db_path.as_os_str().to_str().ok_or_else(|| {
@@ -394,18 +392,12 @@ impl Libraries {
 		);
 		let db = Arc::new(db::load_and_migrate(&db_url).await?);
 
-		println!("load the library 2");
-
 		if let Some(create) = create {
 			create.to_query(&db).exec().await?;
 		}
 
-		println!("load the library 3");
-
 		let node_config = node.config.get().await;
 		let config = LibraryConfig::load(config_path, &node_config, &db).await?;
-
-		println!("load the library 4");
 
 		let instance = db
 			.instance()
@@ -423,8 +415,6 @@ impl Libraries {
 				}
 			},
 		);
-
-		println!("load the library 5");
 
 		let instance_id = Uuid::from_slice(&instance.pub_id)?;
 		let curr_platform = Platform::current() as i32;
@@ -451,16 +441,12 @@ impl Libraries {
 				.await?;
 		}
 
-		println!("load the library 6");
-
 		// TODO: Move this reconciliation into P2P and do reconciliation of both local and remote nodes.
 
 		// let key_manager = Arc::new(KeyManager::new(vec![]).await?);
 		// seed_keymanager(&db, &key_manager).await?;
 
 		let mut sync = sync::Manager::new(&db, instance_id, &self.emit_messages_flag);
-
-		println!("load the library 7");
 
 		let library = Library::new(
 			id,
@@ -473,8 +459,6 @@ impl Libraries {
 			Arc::new(sync.manager),
 		)
 		.await;
-
-		println!("load the library 8");
 
 		// This is an exception. Generally subscribe to this by `self.tx.subscribe`.
 		tokio::spawn({
@@ -500,27 +484,19 @@ impl Libraries {
 			}
 		});
 
-		println!("load the library 9");
-
 		self.tx
 			.emit(LibraryManagerEvent::Load(library.clone()))
 			.await;
-
-		println!("load the library 10");
 
 		self.libraries
 			.write()
 			.await
 			.insert(library.id, Arc::clone(&library));
 
-		println!("load the library 11");
-
 		if should_seed {
 			library.orphan_remover.invoke().await;
 			indexer::rules::seed::new_or_existing_library(&library).await?;
 		}
-
-		println!("load the library 12");
 
 		for location in library
 			.db
@@ -532,11 +508,9 @@ impl Libraries {
 			.exec()
 			.await?
 		{
-			println!("load the library add to node 1");
 			if let Err(e) = node.locations.add(location.id, library.clone()).await {
 				error!("Failed to watch location on startup: {e}");
 			};
-			println!("load the library add to node 2");
 		}
 
 		if let Err(e) = node.jobs.clone().cold_resume(node, &library).await {
